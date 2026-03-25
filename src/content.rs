@@ -14,6 +14,8 @@ pub struct InputTextContent {
 /// Input text content parameter
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InputTextContentParam {
+    #[serde(rename = "type")]
+    pub type_: String, // Always "input_text"
     pub text: String,
 }
 
@@ -52,13 +54,15 @@ pub struct TextContent {
 pub struct InputImageContent {
     #[serde(rename = "type")]
     pub type_: String, // Always "input_image"
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub image_url: Option<String>,
+    pub image_url: String,
+    pub detail: ImageDetail,
 }
 
 /// Input image content parameter with auto detail
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InputImageContentParamAutoParam {
+    #[serde(rename = "type")]
+    pub type_: String, // Always "input_image"
     pub image_url: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub detail: Option<ImageDetail>,

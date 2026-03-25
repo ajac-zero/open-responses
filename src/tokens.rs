@@ -18,21 +18,12 @@ pub struct Usage {
 /// Input tokens details
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InputTokensDetails {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub cached_tokens: Option<i64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub text_tokens: Option<i64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub audio_tokens: Option<i64>,
+    pub cached_tokens: i64,
 }
 
 /// Output tokens details
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OutputTokensDetails {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub text_tokens: Option<i64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub audio_tokens: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reasoning_tokens: Option<i64>,
 }

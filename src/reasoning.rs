@@ -5,20 +5,21 @@ use crate::unions::ReasoningContentPart;
 /// Reasoning information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Reasoning {
-    #[serde(rename = "type")]
-    pub type_: String, // Always "reasoning"
-    pub id: String,
-    pub status: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub content: Option<Vec<ReasoningContentPart>>,
+    pub effort: ReasoningEffortEnum,
+    pub summary: ReasoningSummaryEnum,
 }
 
 /// Reasoning body
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReasoningBody {
-    pub effort: ReasoningEffortEnum,
+    #[serde(rename = "type")]
+    pub type_: String, // Always "reasoning"
+    pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub summary: Option<ReasoningSummaryEnum>,
+    pub content: Option<Vec<ReasoningContentPart>>,
+    pub summary: Vec<ReasoningContentPart>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub encrypted_content: Option<String>,
 }
 
 /// Reasoning parameter
@@ -35,7 +36,12 @@ pub struct ReasoningItemParam {
     #[serde(rename = "type")]
     pub type_: String, // Always "reasoning"
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+    pub summary: Vec<ReasoningContentPart>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub content: Option<Vec<ReasoningContentPart>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub encrypted_content: Option<String>,
 }
 
 /// Reasoning summary content parameter

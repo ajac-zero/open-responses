@@ -12,23 +12,36 @@ use crate::tools::FunctionToolParam;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResponseResource {
     pub id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub object: Option<String>,
+    pub object: String,
+    pub created_at: i64,
+    pub completed_at: Option<String>,
     pub status: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub status_details: Option<serde_json::Value>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub output: Option<Vec<OutputItem>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub usage: Option<Usage>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub created_at: Option<i64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    pub incomplete_details: IncompleteDetails,
+    pub model: String,
+    pub previous_response_id: Option<String>,
+    pub instructions: serde_json::Value,
+    pub output: Vec<OutputItem>,
+    pub error: Option<serde_json::Value>,
+    pub tools: Vec<FunctionToolParam>,
+    pub tool_choice: ToolChoiceParam,
+    pub truncation: TruncationEnum,
+    pub parallel_tool_calls: bool,
+    pub text: serde_json::Value,
+    pub top_p: f64,
+    pub presence_penalty: f64,
+    pub frequency_penalty: f64,
+    pub top_logprobs: i64,
+    pub temperature: f64,
+    pub reasoning: Option<ReasoningParam>,
+    pub usage: Usage,
+    pub max_output_tokens: i64,
+    pub max_tool_calls: i64,
+    pub store: bool,
+    pub background: bool,
+    pub service_tier: String,
     pub metadata: Option<HashMap<String, String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub incomplete_details: Option<IncompleteDetails>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub model: Option<String>,
+    pub safety_identifier: Option<String>,
+    pub prompt_cache_key: Option<String>,
 }
 
 /// Request body for creating a response

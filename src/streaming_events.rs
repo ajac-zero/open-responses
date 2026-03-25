@@ -8,6 +8,7 @@ use crate::unions::{ContentPart, OutputItem, Annotation, ReasoningContentPart};
 pub struct ResponseCreatedStreamingEvent {
     #[serde(rename = "type")]
     pub type_: String, // Always "response.created"
+    pub sequence_number: i64,
     pub response: ResponseResource,
 }
 
@@ -16,6 +17,7 @@ pub struct ResponseCreatedStreamingEvent {
 pub struct ResponseInProgressStreamingEvent {
     #[serde(rename = "type")]
     pub type_: String, // Always "response.in_progress"
+    pub sequence_number: i64,
     pub response: ResponseResource,
 }
 
@@ -24,6 +26,7 @@ pub struct ResponseInProgressStreamingEvent {
 pub struct ResponseCompletedStreamingEvent {
     #[serde(rename = "type")]
     pub type_: String, // Always "response.completed"
+    pub sequence_number: i64,
     pub response: ResponseResource,
 }
 
@@ -32,6 +35,7 @@ pub struct ResponseCompletedStreamingEvent {
 pub struct ResponseFailedStreamingEvent {
     #[serde(rename = "type")]
     pub type_: String, // Always "response.failed"
+    pub sequence_number: i64,
     pub response: ResponseResource,
 }
 
@@ -40,6 +44,7 @@ pub struct ResponseFailedStreamingEvent {
 pub struct ResponseIncompleteStreamingEvent {
     #[serde(rename = "type")]
     pub type_: String, // Always "response.incomplete"
+    pub sequence_number: i64,
     pub response: ResponseResource,
 }
 
@@ -48,6 +53,7 @@ pub struct ResponseIncompleteStreamingEvent {
 pub struct ResponseQueuedStreamingEvent {
     #[serde(rename = "type")]
     pub type_: String, // Always "response.queued"
+    pub sequence_number: i64,
     pub response: ResponseResource,
 }
 
@@ -56,6 +62,9 @@ pub struct ResponseQueuedStreamingEvent {
 pub struct ResponseContentPartAddedStreamingEvent {
     #[serde(rename = "type")]
     pub type_: String, // Always "response.content_part.added"
+    pub sequence_number: i64,
+    pub item_id: String,
+    pub output_index: i64,
     pub content_index: i64,
     pub part: ContentPart,
 }
@@ -65,6 +74,9 @@ pub struct ResponseContentPartAddedStreamingEvent {
 pub struct ResponseContentPartDoneStreamingEvent {
     #[serde(rename = "type")]
     pub type_: String, // Always "response.content_part.done"
+    pub sequence_number: i64,
+    pub item_id: String,
+    pub output_index: i64,
     pub content_index: i64,
     pub part: ContentPart,
 }
@@ -74,7 +86,8 @@ pub struct ResponseContentPartDoneStreamingEvent {
 pub struct ResponseOutputItemAddedStreamingEvent {
     #[serde(rename = "type")]
     pub type_: String, // Always "response.output_item.added"
-    pub item_index: i64,
+    pub sequence_number: i64,
+    pub output_index: i64,
     pub item: OutputItem,
 }
 
@@ -83,7 +96,8 @@ pub struct ResponseOutputItemAddedStreamingEvent {
 pub struct ResponseOutputItemDoneStreamingEvent {
     #[serde(rename = "type")]
     pub type_: String, // Always "response.output_item.done"
-    pub item_index: i64,
+    pub sequence_number: i64,
+    pub output_index: i64,
     pub item: OutputItem,
 }
 
@@ -92,7 +106,9 @@ pub struct ResponseOutputItemDoneStreamingEvent {
 pub struct ResponseOutputTextDeltaStreamingEvent {
     #[serde(rename = "type")]
     pub type_: String, // Always "response.output_text.delta"
-    pub item_index: i64,
+    pub sequence_number: i64,
+    pub item_id: String,
+    pub output_index: i64,
     pub content_index: i64,
     pub delta: String,
 }
@@ -102,7 +118,9 @@ pub struct ResponseOutputTextDeltaStreamingEvent {
 pub struct ResponseOutputTextDoneStreamingEvent {
     #[serde(rename = "type")]
     pub type_: String, // Always "response.output_text.done"
-    pub item_index: i64,
+    pub sequence_number: i64,
+    pub item_id: String,
+    pub output_index: i64,
     pub content_index: i64,
     pub text: String,
 }
@@ -112,7 +130,9 @@ pub struct ResponseOutputTextDoneStreamingEvent {
 pub struct ResponseOutputTextAnnotationAddedStreamingEvent {
     #[serde(rename = "type")]
     pub type_: String, // Always "response.output_text.annotation.added"
-    pub item_index: i64,
+    pub sequence_number: i64,
+    pub item_id: String,
+    pub output_index: i64,
     pub content_index: i64,
     pub annotation_index: i64,
     pub annotation: Annotation,
@@ -123,9 +143,9 @@ pub struct ResponseOutputTextAnnotationAddedStreamingEvent {
 pub struct ResponseFunctionCallArgumentsDeltaStreamingEvent {
     #[serde(rename = "type")]
     pub type_: String, // Always "response.function_call_arguments.delta"
-    pub item_index: i64,
+    pub sequence_number: i64,
+    pub item_id: String,
     pub output_index: i64,
-    pub call_id: String,
     pub delta: String,
 }
 
@@ -134,10 +154,9 @@ pub struct ResponseFunctionCallArgumentsDeltaStreamingEvent {
 pub struct ResponseFunctionCallArgumentsDoneStreamingEvent {
     #[serde(rename = "type")]
     pub type_: String, // Always "response.function_call_arguments.done"
-    pub item_index: i64,
+    pub sequence_number: i64,
+    pub item_id: String,
     pub output_index: i64,
-    pub call_id: String,
-    pub name: String,
     pub arguments: String,
 }
 
@@ -146,7 +165,9 @@ pub struct ResponseFunctionCallArgumentsDoneStreamingEvent {
 pub struct ResponseReasoningDeltaStreamingEvent {
     #[serde(rename = "type")]
     pub type_: String, // Always "response.reasoning.delta"
-    pub item_index: i64,
+    pub sequence_number: i64,
+    pub item_id: String,
+    pub output_index: i64,
     pub content_index: i64,
     pub delta: String,
 }
@@ -156,7 +177,9 @@ pub struct ResponseReasoningDeltaStreamingEvent {
 pub struct ResponseReasoningDoneStreamingEvent {
     #[serde(rename = "type")]
     pub type_: String, // Always "response.reasoning.done"
-    pub item_index: i64,
+    pub sequence_number: i64,
+    pub item_id: String,
+    pub output_index: i64,
     pub content_index: i64,
     pub text: String,
 }
@@ -166,8 +189,10 @@ pub struct ResponseReasoningDoneStreamingEvent {
 pub struct ResponseReasoningSummaryDeltaStreamingEvent {
     #[serde(rename = "type")]
     pub type_: String, // Always "response.reasoning_summary.delta"
-    pub item_index: i64,
-    pub content_index: i64,
+    pub sequence_number: i64,
+    pub item_id: String,
+    pub output_index: i64,
+    pub summary_index: i64,
     pub delta: String,
 }
 
@@ -176,8 +201,10 @@ pub struct ResponseReasoningSummaryDeltaStreamingEvent {
 pub struct ResponseReasoningSummaryDoneStreamingEvent {
     #[serde(rename = "type")]
     pub type_: String, // Always "response.reasoning_summary.done"
-    pub item_index: i64,
-    pub content_index: i64,
+    pub sequence_number: i64,
+    pub item_id: String,
+    pub output_index: i64,
+    pub summary_index: i64,
     pub text: String,
 }
 
@@ -186,8 +213,10 @@ pub struct ResponseReasoningSummaryDoneStreamingEvent {
 pub struct ResponseReasoningSummaryPartAddedStreamingEvent {
     #[serde(rename = "type")]
     pub type_: String, // Always "response.reasoning_summary_part.added"
-    pub item_index: i64,
-    pub content_index: i64,
+    pub sequence_number: i64,
+    pub item_id: String,
+    pub output_index: i64,
+    pub summary_index: i64,
     pub part: ReasoningContentPart,
 }
 
@@ -196,8 +225,10 @@ pub struct ResponseReasoningSummaryPartAddedStreamingEvent {
 pub struct ResponseReasoningSummaryPartDoneStreamingEvent {
     #[serde(rename = "type")]
     pub type_: String, // Always "response.reasoning_summary_part.done"
-    pub item_index: i64,
-    pub content_index: i64,
+    pub sequence_number: i64,
+    pub item_id: String,
+    pub output_index: i64,
+    pub summary_index: i64,
     pub part: ReasoningContentPart,
 }
 
@@ -206,7 +237,9 @@ pub struct ResponseReasoningSummaryPartDoneStreamingEvent {
 pub struct ResponseRefusalDeltaStreamingEvent {
     #[serde(rename = "type")]
     pub type_: String, // Always "response.refusal.delta"
-    pub item_index: i64,
+    pub sequence_number: i64,
+    pub item_id: String,
+    pub output_index: i64,
     pub content_index: i64,
     pub delta: String,
 }
@@ -216,7 +249,9 @@ pub struct ResponseRefusalDeltaStreamingEvent {
 pub struct ResponseRefusalDoneStreamingEvent {
     #[serde(rename = "type")]
     pub type_: String, // Always "response.refusal.done"
-    pub item_index: i64,
+    pub sequence_number: i64,
+    pub item_id: String,
+    pub output_index: i64,
     pub content_index: i64,
     pub refusal: String,
 }

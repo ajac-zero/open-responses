@@ -7,12 +7,11 @@ pub struct FunctionCall {
     #[serde(rename = "type")]
     pub type_: String, // Always "function_call"
     pub id: String,
+    pub call_id: String,
     pub status: FunctionCallStatus,
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub arguments: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub output: Option<String>,
 }
 
 /// Function call output
@@ -54,11 +53,20 @@ pub struct InputFileContent {
     #[serde(rename = "type")]
     pub type_: String, // Always "input_file"
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub file_id: Option<String>,
+    pub filename: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub file_url: Option<String>,
 }
 
 /// Input file content parameter
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InputFileContentParam {
-    pub file_id: String,
+    #[serde(rename = "type")]
+    pub type_: String, // Always "input_file"
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub filename: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub file_data: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub file_url: Option<String>,
 }

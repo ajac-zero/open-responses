@@ -6,6 +6,7 @@ pub struct LogProb {
     pub token: String,
     pub logprob: f64,
     pub bytes: Vec<i64>,
+    pub top_logprobs: Vec<TopLogProb>,
 }
 
 /// Top log probability information
