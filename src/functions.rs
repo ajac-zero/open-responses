@@ -4,7 +4,7 @@ use crate::enums::FunctionCallStatus;
 /// Function call
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FunctionCall {
-    #[serde(rename = "type")]
+    #[serde(rename = "type", skip_deserializing)]
     pub type_: String, // Always "function_call"
     pub id: String,
     pub call_id: String,
@@ -17,7 +17,7 @@ pub struct FunctionCall {
 /// Function call output
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FunctionCallOutput {
-    #[serde(rename = "type")]
+    #[serde(rename = "type", skip_deserializing)]
     pub type_: String, // Always "function_call_output"
     pub id: String,
     pub status: FunctionCallStatus,
@@ -29,7 +29,7 @@ pub struct FunctionCallOutput {
 /// Function call item parameter
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FunctionCallItemParam {
-    #[serde(rename = "type")]
+    #[serde(rename = "type", skip_deserializing)]
     pub type_: String, // Always "function_call"
     pub name: String,
     pub arguments: String,
@@ -40,7 +40,7 @@ pub struct FunctionCallItemParam {
 /// Function call output item parameter
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FunctionCallOutputItemParam {
-    #[serde(rename = "type")]
+    #[serde(rename = "type", skip_deserializing)]
     pub type_: String, // Always "function_call_output"
     pub call_id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -50,7 +50,7 @@ pub struct FunctionCallOutputItemParam {
 /// Input file content
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InputFileContent {
-    #[serde(rename = "type")]
+    #[serde(rename = "type", skip_deserializing)]
     pub type_: String, // Always "input_file"
     #[serde(skip_serializing_if = "Option::is_none")]
     pub filename: Option<String>,
@@ -61,7 +61,7 @@ pub struct InputFileContent {
 /// Input file content parameter
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InputFileContentParam {
-    #[serde(rename = "type")]
+    #[serde(rename = "type", skip_deserializing)]
     pub type_: String, // Always "input_file"
     #[serde(skip_serializing_if = "Option::is_none")]
     pub filename: Option<String>,

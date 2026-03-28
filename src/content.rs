@@ -5,7 +5,7 @@ use crate::unions::{Annotation, AnnotationParam};
 /// Input text content
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InputTextContent {
-    #[serde(rename = "type")]
+    #[serde(rename = "type", skip_deserializing)]
     pub type_: String, // Always "input_text"
     #[serde(skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
@@ -14,7 +14,7 @@ pub struct InputTextContent {
 /// Input text content parameter
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InputTextContentParam {
-    #[serde(rename = "type")]
+    #[serde(rename = "type", skip_deserializing)]
     pub type_: String, // Always "input_text"
     pub text: String,
 }
@@ -22,7 +22,7 @@ pub struct InputTextContentParam {
 /// Output text content
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OutputTextContent {
-    #[serde(rename = "type")]
+    #[serde(rename = "type", skip_deserializing)]
     pub type_: String, // Always "output_text"
     #[serde(skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
@@ -33,7 +33,7 @@ pub struct OutputTextContent {
 /// Output text content parameter
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OutputTextContentParam {
-    #[serde(rename = "type")]
+    #[serde(rename = "type", skip_deserializing)]
     pub type_: String, // Always "output_text"
     pub text: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -43,7 +43,7 @@ pub struct OutputTextContentParam {
 /// Text content
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TextContent {
-    #[serde(rename = "type")]
+    #[serde(rename = "type", skip_deserializing)]
     pub type_: String, // Always "text"
     #[serde(skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
@@ -52,7 +52,7 @@ pub struct TextContent {
 /// Input image content
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InputImageContent {
-    #[serde(rename = "type")]
+    #[serde(rename = "type", skip_deserializing)]
     pub type_: String, // Always "input_image"
     pub image_url: String,
     pub detail: ImageDetail,
@@ -61,7 +61,7 @@ pub struct InputImageContent {
 /// Input image content parameter with auto detail
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InputImageContentParamAutoParam {
-    #[serde(rename = "type")]
+    #[serde(rename = "type", skip_deserializing)]
     pub type_: String, // Always "input_image"
     pub image_url: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -71,7 +71,7 @@ pub struct InputImageContentParamAutoParam {
 /// Input video content
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InputVideoContent {
-    #[serde(rename = "type")]
+    #[serde(rename = "type", skip_deserializing)]
     pub type_: String, // Always "input_video"
     #[serde(skip_serializing_if = "Option::is_none")]
     pub video_url: Option<String>,
@@ -80,7 +80,7 @@ pub struct InputVideoContent {
 /// Reasoning text content
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReasoningTextContent {
-    #[serde(rename = "type")]
+    #[serde(rename = "type", skip_deserializing)]
     pub type_: String, // Always "reasoning_text"
     #[serde(skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
@@ -89,7 +89,7 @@ pub struct ReasoningTextContent {
 /// Refusal content
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RefusalContent {
-    #[serde(rename = "type")]
+    #[serde(rename = "type", skip_deserializing)]
     pub type_: String, // Always "refusal"
     #[serde(skip_serializing_if = "Option::is_none")]
     pub refusal: Option<String>,
@@ -98,7 +98,7 @@ pub struct RefusalContent {
 /// Refusal content parameter
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RefusalContentParam {
-    #[serde(rename = "type")]
+    #[serde(rename = "type", skip_deserializing)]
     pub type_: String, // Always "refusal"
     pub refusal: String,
 }
@@ -106,7 +106,7 @@ pub struct RefusalContentParam {
 /// Summary text content
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SummaryTextContent {
-    #[serde(rename = "type")]
+    #[serde(rename = "type", skip_deserializing)]
     pub type_: String, // Always "summary_text"
     #[serde(skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
