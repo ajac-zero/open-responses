@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::unions::TextFormatParam;
+use serde::{Deserialize, Serialize};
 
 /// Stream options parameter
 #[derive(Debug, Clone, Serialize, Deserialize)]

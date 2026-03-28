@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::enums::ToolChoiceValueEnum;
+use serde::{Deserialize, Serialize};
 
 /// Defines a function tool
 #[derive(Debug, Clone, Serialize, Deserialize)]

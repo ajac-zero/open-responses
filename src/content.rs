@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
 use crate::enums::ImageDetail;
 use crate::unions::{Annotation, AnnotationParam};
+use serde::{Deserialize, Serialize};
 
 /// Input text content
 #[derive(Debug, Clone, Serialize, Deserialize)]

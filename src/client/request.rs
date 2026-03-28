@@ -6,8 +6,9 @@ use tracing::debug;
 
 use crate::client::{ClientCore, Error, Mode, ResponseStream, Result, RESPONSES_PATH};
 use crate::{
-    CreateResponseBody, FunctionToolParam, IncludeEnum, ReasoningParam, ResponseResource,
-    ServiceTierEnum, StreamOptionsParam, TextParam, ToolChoiceParam, TruncationEnum,
+    CreateResponseBody, FunctionToolParam, IncludeEnum, InputItem, ReasoningParam,
+    ResponseResource, ServiceTierEnum, StreamOptionsParam, TextParam, ToolChoiceParam,
+    TruncationEnum,
 };
 
 fn empty_request_body() -> CreateResponseBody {
@@ -64,9 +65,27 @@ impl<'a, M: Mode> ResponseRequestBuilder<'a, M> {
         self
     }
 
+    fn serialized_input(mut self, input: impl serde::Serialize) -> Self {
+        self.body.input =
+            Some(serde_json::to_value(input).expect("response request input should serialize"));
+        self
+    }
+
     pub fn input(mut self, input: serde_json::Value) -> Self {
         self.body.input = Some(input);
         self
+    }
+
+    pub fn input_item(self, input: InputItem) -> Self {
+        self.input_items([input])
+    }
+
+    pub fn input_items(self, input: impl IntoIterator<Item = InputItem>) -> Self {
+        self.serialized_input(input.into_iter().collect::<Vec<_>>())
+    }
+
+    pub fn input_text(self, text: impl Into<String>) -> Self {
+        self.serialized_input(text.into())
     }
 
     pub fn model(mut self, model: impl Into<String>) -> Self {
@@ -270,5 +289,81 @@ impl<M: Mode> std::fmt::Debug for ResponseRequestBuilder<'_, M> {
         f.debug_struct("ResponseRequestBuilder")
             .field("body", &self.body)
             .finish()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::client::Client;
+    use crate::{InputContentPart, InputTextContentParam, UserMessageItemParam};
+
+    fn user_message(text: &str) -> InputItem {
+        InputItem::UserMessage(UserMessageItemParam {
+            type_: "message".into(),
+            role: "user".into(),
+            content: Some(vec![InputContentPart::InputText(InputTextContentParam {
+                type_: "input_text".into(),
+                text: text.into(),
+            })]),
+        })
+    }
+
+    #[test]
+    fn input_item_serializes_as_item_array() {
+        let client = Client::default();
+        let builder = client.create_response().input_item(user_message("hello"));
+
+        assert_eq!(
+            builder.body.input,
+            Some(serde_json::json!([
+                {
+                    "type": "message",
+                    "role": "user",
+                    "content": [{
+                        "type": "input_text",
+                        "text": "hello"
+                    }]
+                }
+            ]))
+        );
+    }
+
+    #[test]
+    fn input_text_serializes_as_plain_string() {
+        let client = Client::default();
+        let builder = client.create_response().input_text("hello");
+
+        assert_eq!(builder.body.input, Some(serde_json::json!("hello")));
+    }
+
+    #[test]
+    fn input_items_serializes_as_item_array() {
+        let client = Client::default();
+        let builder = client
+            .create_response()
+            .input_items([user_message("hello"), user_message("world")]);
+
+        assert_eq!(
+            builder.body.input,
+            Some(serde_json::json!([
+                {
+                    "type": "message",
+                    "role": "user",
+                    "content": [{
+                        "type": "input_text",
+                        "text": "hello"
+                    }]
+                },
+                {
+                    "type": "message",
+                    "role": "user",
+                    "content": [{
+                        "type": "input_text",
+                        "text": "world"
+                    }]
+                }
+            ]))
+        );
     }
 }

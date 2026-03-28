@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::enums::FunctionCallStatus;
+use serde::{Deserialize, Serialize};
 
 /// Function call
 #[derive(Debug, Clone, Serialize, Deserialize)]

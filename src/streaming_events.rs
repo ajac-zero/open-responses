@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::response::ResponseResource;
-use crate::unions::{ContentPart, OutputItem, Annotation, ReasoningContentPart};
+use crate::unions::{Annotation, ContentPart, OutputItem, ReasoningContentPart};
 
 /// Response created streaming event
 #[derive(Debug, Clone, Serialize, Deserialize)]

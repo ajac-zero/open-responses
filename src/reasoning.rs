@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
 use crate::enums::{ReasoningEffortEnum, ReasoningSummaryEnum};
 use crate::unions::ReasoningContentPart;
+use serde::{Deserialize, Serialize};
 
 /// Reasoning information
 #[derive(Debug, Clone, Serialize, Deserialize)]

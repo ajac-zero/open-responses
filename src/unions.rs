@@ -1,12 +1,12 @@
-use serde::{Deserialize, Serialize};
 use crate::content::*;
+use crate::enums::ToolChoiceValueEnum;
 use crate::functions::*;
 use crate::messages::*;
 use crate::parameters::*;
 use crate::reasoning::*;
 use crate::response_format::*;
 use crate::tools::*;
-use crate::enums::ToolChoiceValueEnum;
+use serde::{Deserialize, Serialize};
 
 /// Content part union for input content
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -112,65 +112,68 @@ impl<'de> Deserialize<'de> for InputItem {
         let value = serde_json::Value::deserialize(deserializer)?;
 
         // Extract type field directly from the Value
-        let type_field = value.get("type")
+        let type_field = value
+            .get("type")
             .and_then(|v| v.as_str())
             .ok_or_else(|| D::Error::missing_field("type"))?;
 
         match type_field {
             "message" => {
                 // For messages, check the role field
-                let role = value.get("role")
+                let role = value
+                    .get("role")
                     .and_then(|v| v.as_str())
                     .ok_or_else(|| D::Error::missing_field("role"))?;
 
                 match role {
                     "user" => {
-                        let msg = serde_json::from_value(value)
-                            .map_err(D::Error::custom)?;
+                        let msg = serde_json::from_value(value).map_err(D::Error::custom)?;
                         Ok(InputItem::UserMessage(msg))
                     }
                     "assistant" => {
-                        let msg = serde_json::from_value(value)
-                            .map_err(D::Error::custom)?;
+                        let msg = serde_json::from_value(value).map_err(D::Error::custom)?;
                         Ok(InputItem::AssistantMessage(msg))
                     }
                     "system" => {
-                        let msg = serde_json::from_value(value)
-                            .map_err(D::Error::custom)?;
+                        let msg = serde_json::from_value(value).map_err(D::Error::custom)?;
                         Ok(InputItem::SystemMessage(msg))
                     }
                     "developer" => {
-                        let msg = serde_json::from_value(value)
-                            .map_err(D::Error::custom)?;
+                        let msg = serde_json::from_value(value).map_err(D::Error::custom)?;
                         Ok(InputItem::DeveloperMessage(msg))
                     }
-                    _ => Err(D::Error::unknown_variant(role, &["user", "assistant", "system", "developer"]))
+                    _ => Err(D::Error::unknown_variant(
+                        role,
+                        &["user", "assistant", "system", "developer"],
+                    )),
                 }
             }
             "function_call" => {
-                let fc = serde_json::from_value(value)
-                    .map_err(D::Error::custom)?;
+                let fc = serde_json::from_value(value).map_err(D::Error::custom)?;
                 Ok(InputItem::FunctionCall(fc))
             }
             "function_call_output" => {
-                let fco = serde_json::from_value(value)
-                    .map_err(D::Error::custom)?;
+                let fco = serde_json::from_value(value).map_err(D::Error::custom)?;
                 Ok(InputItem::FunctionCallOutput(fco))
             }
             "reasoning" => {
-                let r = serde_json::from_value(value)
-                    .map_err(D::Error::custom)?;
+                let r = serde_json::from_value(value).map_err(D::Error::custom)?;
                 Ok(InputItem::Reasoning(r))
             }
             "item_reference" => {
-                let ir = serde_json::from_value(value)
-                    .map_err(D::Error::custom)?;
+                let ir = serde_json::from_value(value).map_err(D::Error::custom)?;
                 Ok(InputItem::ItemReference(ir))
             }
             _ => Err(D::Error::unknown_variant(
                 type_field,
-                &["message", "function_call", "function_call_output", "reasoning", "item_reference"]
-            ))
+                &[
+                    "message",
+                    "function_call",
+                    "function_call_output",
+                    "reasoning",
+                    "item_reference",
+                ],
+            )),
         }
     }
 }
@@ -232,7 +235,7 @@ mod tests {
         assert!(result.is_ok(), "Failed to deserialize: {:?}", result.err());
 
         match result.unwrap() {
-            InputItem::UserMessage(_) => {},
+            InputItem::UserMessage(_) => {}
             other => panic!("Expected UserMessage, got {:?}", other),
         }
     }
@@ -269,7 +272,11 @@ mod tests {
         });
 
         let result: Result<UserMessageItemParam, _> = serde_json::from_value(json.clone());
-        assert!(result.is_ok(), "Failed to deserialize UserMessageItemParam: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "Failed to deserialize UserMessageItemParam: {:?}",
+            result.err()
+        );
     }
 
     #[test]
@@ -280,6 +287,10 @@ mod tests {
         });
 
         let result: Result<InputContentPart, _> = serde_json::from_value(json.clone());
-        assert!(result.is_ok(), "Failed to deserialize InputContentPart: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "Failed to deserialize InputContentPart: {:?}",
+            result.err()
+        );
     }
 }

@@ -1,6 +1,6 @@
+use crate::enums::{MessageRole, MessageStatus};
+use crate::unions::{AssistantContentPart, ContentPart, InputContentPart};
 use serde::{Deserialize, Serialize};
-use crate::enums::{MessageStatus, MessageRole};
-use crate::unions::{ContentPart, InputContentPart, AssistantContentPart};
 
 /// A message to or from the model
 #[derive(Debug, Clone, Serialize, Deserialize)]

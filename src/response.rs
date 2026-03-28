@@ -1,12 +1,12 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::tokens::{IncompleteDetails, Usage};
+use crate::enums::{IncludeEnum, ServiceTierEnum, TruncationEnum};
 use crate::parameters::{StreamOptionsParam, TextParam};
 use crate::reasoning::ReasoningParam;
-use crate::enums::{IncludeEnum, TruncationEnum, ServiceTierEnum};
-use crate::unions::{OutputItem, ToolChoiceParam};
+use crate::tokens::{IncompleteDetails, Usage};
 use crate::tools::FunctionToolParam;
+use crate::unions::{OutputItem, ToolChoiceParam};
 
 /// Response resource
 #[derive(Debug, Clone, Serialize, Deserialize)]
