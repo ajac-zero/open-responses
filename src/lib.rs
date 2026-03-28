@@ -1,4 +1,6 @@
 // Module declarations
+#[cfg(feature = "client")]
+pub mod client;
 pub mod content;
 pub mod enums;
 pub mod errors;
