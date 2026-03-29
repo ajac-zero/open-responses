@@ -36,11 +36,11 @@ pub enum ResponseEvent {
     },
     OutputItemAdded {
         output_index: i64,
-        item: OutputItem,
+        item: Option<OutputItem>,
     },
     OutputItemDone {
         output_index: i64,
-        item: OutputItem,
+        item: Option<OutputItem>,
     },
     ContentPartAdded {
         item_id: String,
@@ -71,7 +71,7 @@ pub enum ResponseEvent {
         output_index: i64,
         content_index: i64,
         annotation_index: i64,
-        annotation: Annotation,
+        annotation: Option<Annotation>,
     },
     FunctionCallDelta {
         item_id: String,
