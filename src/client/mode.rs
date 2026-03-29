@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-pub trait Mode: std::marker::Sync + Send + Clone {
+pub(crate) trait Mode: std::marker::Sync + Send + Clone {
     fn new() -> Self;
 
     fn runtime(&self) -> Option<Arc<tokio::runtime::Runtime>> {
@@ -9,8 +9,8 @@ pub trait Mode: std::marker::Sync + Send + Clone {
 }
 
 #[derive(Debug, Clone)]
-pub struct Sync {
-    pub rt: Arc<tokio::runtime::Runtime>,
+pub(crate) struct Sync {
+    rt: Arc<tokio::runtime::Runtime>,
 }
 
 impl Mode for Sync {
@@ -25,7 +25,7 @@ impl Mode for Sync {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct Async;
+pub(crate) struct Async;
 
 impl Mode for Async {
     fn new() -> Self {

@@ -375,18 +375,13 @@ fn parse_event(event_type: &str, data: &str) -> Result<ResponseEvent> {
     Ok(event)
 }
 
-/// A streaming response from the Open Responses API.
-pub struct ResponseStream {
+struct ResponseStreamCore {
     events: tokio::sync::mpsc::UnboundedReceiver<Result<ResponseEvent>>,
     result: Option<tokio::sync::oneshot::Receiver<Result<ResponseResource>>>,
-    rt: Option<Arc<tokio::runtime::Runtime>>,
 }
 
-impl ResponseStream {
-    pub(crate) fn spawn(
-        response: reqwest::Response,
-        rt: Option<Arc<tokio::runtime::Runtime>>,
-    ) -> Self {
+impl ResponseStreamCore {
+    fn spawn(response: reqwest::Response, rt: Option<Arc<tokio::runtime::Runtime>>) -> Self {
         use futures_core::Stream as FuturesStream;
         use std::pin::pin;
 
@@ -468,13 +463,10 @@ impl ResponseStream {
         Self {
             events: event_rx,
             result: Some(result_rx),
-            rt,
         }
     }
 
-    /// Consumes the stream and returns the final response.
-    /// Drains all remaining events before returning.
-    pub async fn final_result(mut self) -> Result<ResponseResource> {
+    async fn final_result(mut self) -> Result<ResponseResource> {
         while self.events.recv().await.is_some() {}
 
         self.result
@@ -482,6 +474,47 @@ impl ResponseStream {
             .expect("final_result called only once")
             .await
             .map_err(|_| Error::StreamClosed)?
+    }
+}
+
+/// A blocking streaming response from the Open Responses API.
+pub struct ResponseStream {
+    core: ResponseStreamCore,
+    rt: Arc<tokio::runtime::Runtime>,
+}
+
+impl ResponseStream {
+    pub(crate) fn spawn(response: reqwest::Response, rt: Arc<tokio::runtime::Runtime>) -> Self {
+        Self {
+            core: ResponseStreamCore::spawn(response, Some(rt.clone())),
+            rt,
+        }
+    }
+
+    /// Consumes the stream and returns the final response.
+    /// Drains all remaining events before returning.
+    pub fn final_result(self) -> Result<ResponseResource> {
+        let Self { core, rt } = self;
+        rt.block_on(core.final_result())
+    }
+}
+
+/// An async streaming response from the Open Responses API.
+pub struct AsyncResponseStream {
+    core: ResponseStreamCore,
+}
+
+impl AsyncResponseStream {
+    pub(crate) fn spawn(response: reqwest::Response) -> Self {
+        Self {
+            core: ResponseStreamCore::spawn(response, None),
+        }
+    }
+
+    /// Consumes the stream and returns the final response.
+    /// Drains all remaining events before returning.
+    pub async fn final_result(self) -> Result<ResponseResource> {
+        self.core.final_result().await
     }
 }
 
@@ -529,11 +562,11 @@ fn resolve_event_type(event_type: Option<&str>, data: &str) -> Result<ResponseEv
     }
 }
 
-impl futures_core::Stream for ResponseStream {
+impl futures_core::Stream for AsyncResponseStream {
     type Item = Result<ResponseEvent>;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        self.events.poll_recv(cx)
+        self.as_mut().get_mut().core.events.poll_recv(cx)
     }
 }
 
@@ -541,16 +574,18 @@ impl Iterator for ResponseStream {
     type Item = Result<ResponseEvent>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let rt = self
-            .rt
-            .clone()
-            .expect("iterator only available in sync mode");
-        rt.block_on(self.events.recv())
+        self.rt.block_on(self.core.events.recv())
     }
 }
 
 impl std::fmt::Debug for ResponseStream {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ResponseStream").finish()
+    }
+}
+
+impl std::fmt::Debug for AsyncResponseStream {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AsyncResponseStream").finish()
     }
 }

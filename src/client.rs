@@ -4,11 +4,10 @@ mod mode;
 mod request;
 mod stream;
 
-pub use core::{AsyncClient, Client, ClientCore};
+pub use core::{AsyncClient, AsyncClientBuilder, Client, ClientBuilder};
 pub use error::{Error, Result};
-pub use mode::{Async, Mode, Sync};
-pub use request::ResponseRequestBuilder;
-pub use stream::{ResponseEvent, ResponseStream};
+pub use request::{AsyncResponseRequestBuilder, ResponseRequestBuilder};
+pub use stream::{AsyncResponseStream, ResponseEvent, ResponseStream};
 
 const RESPONSES_PATH: [&str; 1] = ["responses"];
 
