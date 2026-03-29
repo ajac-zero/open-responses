@@ -5,8 +5,8 @@ use serde::{Deserialize, Serialize};
 /// Reasoning information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Reasoning {
-    pub effort: ReasoningEffortEnum,
-    pub summary: ReasoningSummaryEnum,
+    pub effort: Option<ReasoningEffortEnum>,
+    pub summary: Option<ReasoningSummaryEnum>,
 }
 
 /// Reasoning body

@@ -12,7 +12,7 @@ pub struct Error {
 pub struct ErrorPayload {
     #[serde(rename = "type")]
     pub type_: String,
-    pub code: String,
+    pub code: Option<String>,
     pub message: String,
     pub param: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

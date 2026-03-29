@@ -88,7 +88,7 @@ pub struct ResponseOutputItemAddedStreamingEvent {
     pub type_: String, // Always "response.output_item.added"
     pub sequence_number: i64,
     pub output_index: i64,
-    pub item: OutputItem,
+    pub item: Option<OutputItem>,
 }
 
 /// Response output item done streaming event
@@ -98,7 +98,7 @@ pub struct ResponseOutputItemDoneStreamingEvent {
     pub type_: String, // Always "response.output_item.done"
     pub sequence_number: i64,
     pub output_index: i64,
-    pub item: OutputItem,
+    pub item: Option<OutputItem>,
 }
 
 /// Response output text delta streaming event
@@ -135,7 +135,7 @@ pub struct ResponseOutputTextAnnotationAddedStreamingEvent {
     pub output_index: i64,
     pub content_index: i64,
     pub annotation_index: i64,
-    pub annotation: Annotation,
+    pub annotation: Option<Annotation>,
 }
 
 /// Response function call arguments delta streaming event

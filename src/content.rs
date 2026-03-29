@@ -54,7 +54,7 @@ pub struct TextContent {
 pub struct InputImageContent {
     #[serde(rename = "type", skip_deserializing)]
     pub type_: String, // Always "input_image"
-    pub image_url: String,
+    pub image_url: Option<String>,
     pub detail: ImageDetail,
 }
 

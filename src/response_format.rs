@@ -42,7 +42,4 @@ pub struct JsonSchemaResponseFormatParam {
 
 /// Empty model parameter
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct EmptyModelParam {
-    #[serde(rename = "type")]
-    pub type_: String,
-}
+pub struct EmptyModelParam {}
