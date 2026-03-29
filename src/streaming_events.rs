@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+use crate::logprobs::LogProb;
 use crate::response::ResponseResource;
 use crate::unions::{Annotation, ContentPart, OutputItem, ReasoningContentPart};
 
@@ -111,6 +112,10 @@ pub struct ResponseOutputTextDeltaStreamingEvent {
     pub output_index: i64,
     pub content_index: i64,
     pub delta: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub logprobs: Option<Vec<LogProb>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub obfuscation: Option<String>,
 }
 
 /// Response output text done streaming event
@@ -123,6 +128,8 @@ pub struct ResponseOutputTextDoneStreamingEvent {
     pub output_index: i64,
     pub content_index: i64,
     pub text: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub logprobs: Option<Vec<LogProb>>,
 }
 
 /// Response output text annotation added streaming event
@@ -147,6 +154,8 @@ pub struct ResponseFunctionCallArgumentsDeltaStreamingEvent {
     pub item_id: String,
     pub output_index: i64,
     pub delta: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub obfuscation: Option<String>,
 }
 
 /// Response function call arguments done streaming event
@@ -170,6 +179,8 @@ pub struct ResponseReasoningDeltaStreamingEvent {
     pub output_index: i64,
     pub content_index: i64,
     pub delta: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub obfuscation: Option<String>,
 }
 
 /// Response reasoning done streaming event
@@ -194,6 +205,8 @@ pub struct ResponseReasoningSummaryDeltaStreamingEvent {
     pub output_index: i64,
     pub summary_index: i64,
     pub delta: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub obfuscation: Option<String>,
 }
 
 /// Response reasoning summary done streaming event

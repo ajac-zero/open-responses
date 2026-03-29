@@ -1,4 +1,4 @@
-use crate::enums::FunctionCallStatus;
+use crate::enums::{FunctionCallOutputStatusEnum, FunctionCallStatus};
 use serde::{Deserialize, Serialize};
 
 /// Function call
@@ -10,8 +10,7 @@ pub struct FunctionCall {
     pub call_id: String,
     pub status: FunctionCallStatus,
     pub name: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub arguments: Option<String>,
+    pub arguments: String,
 }
 
 /// Function call output
@@ -20,10 +19,9 @@ pub struct FunctionCallOutput {
     #[serde(rename = "type", skip_deserializing)]
     pub type_: String, // Always "function_call_output"
     pub id: String,
-    pub status: FunctionCallStatus,
+    pub status: FunctionCallOutputStatusEnum,
     pub call_id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub output: Option<String>,
+    pub output: String,
 }
 
 /// Function call item parameter
@@ -33,8 +31,11 @@ pub struct FunctionCallItemParam {
     pub type_: String, // Always "function_call"
     pub name: String,
     pub arguments: String,
+    pub call_id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub call_id: Option<String>,
+    pub id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub status: Option<String>,
 }
 
 /// Function call output item parameter
@@ -43,8 +44,12 @@ pub struct FunctionCallOutputItemParam {
     #[serde(rename = "type", skip_deserializing)]
     pub type_: String, // Always "function_call_output"
     pub call_id: String,
+    // Can be a string or array of content parts - using serde_json::Value for flexibility
+    pub output: serde_json::Value,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub output: Option<String>,
+    pub id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub status: Option<String>,
 }
 
 /// Input file content

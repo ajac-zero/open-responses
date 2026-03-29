@@ -20,11 +20,9 @@ pub struct JsonSchemaResponseFormat {
     #[serde(rename = "type")]
     pub type_: String, // Always "json_schema"
     pub name: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
-    pub schema: serde_json::Value,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub strict: Option<bool>,
+    pub description: Option<String>, // nullable in spec
+    pub schema: serde_json::Value,    // nullable in spec but required
+    pub strict: bool,
 }
 
 /// JSON schema response format parameter

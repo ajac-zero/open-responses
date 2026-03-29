@@ -1,5 +1,11 @@
+use crate::enums::VerbosityEnum;
 use crate::unions::TextFormatParam;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
+/// Metadata parameter - key-value pairs attached to objects
+/// Keys max length: 64 characters, Values max length: 512 characters, max 16 pairs
+pub type MetadataParam = HashMap<String, String>;
 
 /// Stream options parameter
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -13,13 +19,16 @@ pub struct StreamOptionsParam {
 pub struct TextParam {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub format: Option<TextFormatParam>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub verbosity: Option<VerbosityEnum>,
 }
 
 /// Text field
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TextField {
+    pub format: TextFormatParam,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub format: Option<TextFormatParam>,
+    pub verbosity: Option<VerbosityEnum>,
 }
 
 /// Item reference parameter

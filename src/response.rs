@@ -39,7 +39,7 @@ pub struct ResponseResource {
     pub store: bool,
     pub background: bool,
     pub service_tier: String,
-    pub metadata: Option<serde_json::Value>,
+    pub metadata: serde_json::Value,
     pub safety_identifier: Option<String>,
     pub prompt_cache_key: Option<String>,
 }

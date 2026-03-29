@@ -100,6 +100,18 @@ pub enum MessageStatus {
     Incomplete,
 }
 
+/// Verbosity level for text output
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum VerbosityEnum {
+    /// Instruct the model to emit less verbose final responses
+    Low,
+    /// Use the model's default verbosity setting
+    Medium,
+    /// Instruct the model to emit more verbose final responses
+    High,
+}
+
 /// Message role
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -123,5 +135,14 @@ pub enum FunctionCallStatus {
     /// Model has finished sampling this item
     Completed,
     /// Model was interrupted from sampling this item partway through
+    Incomplete,
+}
+
+/// Function call output status
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum FunctionCallOutputStatusEnum {
+    InProgress,
+    Completed,
     Incomplete,
 }

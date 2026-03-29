@@ -162,6 +162,16 @@ def extract_rust_structs(src_dir):
                 "file": str(rs_file.relative_to(src_path.parent)),
             }
 
+        # Also find type aliases (e.g., pub type Name = OtherType;)
+        for m in re.finditer(r'pub type (\w+)\s*=\s*([^;]+);', content):
+            type_name = m.group(1)
+            # Treat type aliases as empty structs for matching purposes
+            rust_structs[type_name] = {
+                "fields": {},
+                "file": str(rs_file.relative_to(src_path.parent)),
+                "is_type_alias": True,
+            }
+
     return rust_structs
 
 
@@ -338,14 +348,27 @@ def validate_structs(spec, rust_structs):
                 "message": f"{schema_name}: Extra Rust field '{field}' (not in spec)",
             })
 
+        # d) Missing optional fields in spec but not in Rust
+        missing_optional = prop_names - rust_json_names - required
+        for field in sorted(missing_optional):
+            issues.append({
+                "struct": schema_name,
+                "category": "missing_optional_field",
+                "field": field,
+                "message": f"{schema_name}: Missing optional field '{field}' (in spec but not in Rust)",
+            })
+
         # c) Type mismatches
         for prop_name in sorted(prop_names & rust_json_names):
             spec_types = get_json_type(spec, props[prop_name])
             rust_field = rust_fields[prop_name]
             rust_types = rust_type_to_json_types(rust_field["rust_type"])
+            
+            # serde_json::Value is flexible enough to handle any JSON type
+            rust_is_json_value = "serde_json::Value" in rust_field["rust_type"]
 
-            # Check if there's any overlap
-            if not (spec_types & rust_types):
+            # Check if there's any overlap (skip for serde_json::Value which handles all types)
+            if not rust_is_json_value and not (spec_types & rust_types):
                 issues.append({
                     "struct": schema_name,
                     "category": "type_mismatch",
@@ -360,7 +383,6 @@ def validate_structs(spec, rust_structs):
             # Check nullability: if spec allows null, Rust should be Option
             spec_nullable = is_nullable(spec, props[prop_name])
             rust_is_option = rust_field["rust_type"].startswith("Option<")
-            rust_is_json_value = "serde_json::Value" in rust_field["rust_type"]
             if spec_nullable and not rust_is_option and not rust_is_json_value:
                 if prop_name not in required:
                     pass  # optional and not Option is fine if skip_serializing_if
@@ -372,6 +394,22 @@ def validate_structs(spec, rust_structs):
                         "message": (
                             f"{schema_name}.{prop_name}: Spec allows null but "
                             f"Rust type is '{rust_field['rust_type']}' (not Option<T>)"
+                        ),
+                    })
+            
+            # Check if required field is incorrectly wrapped in Option
+            # Required fields should not be Option unless spec explicitly allows null
+            # Exception: serde_json::Value can handle null, so it's acceptable
+            if prop_name in required and rust_is_option and not spec_nullable:
+                # serde_json::Value is flexible enough to handle any type including null
+                if not rust_is_json_value:
+                    issues.append({
+                        "struct": schema_name,
+                        "category": "required_field_option",
+                        "field": prop_name,
+                        "message": (
+                            f"{schema_name}.{prop_name}: Required field should not be Option<T> "
+                            f"(spec does not allow null, but Rust type is '{rust_field['rust_type']}')"
                         ),
                     })
 
@@ -415,10 +453,37 @@ def validate_enums(spec, rust_enums):
     return issues
 
 
+def find_schema_references(spec):
+    """Find all $ref references to schemas in the spec.
+    Returns a set of schema names that are referenced.
+    """
+    referenced = set()
+    
+    def find_refs(obj):
+        if isinstance(obj, dict):
+            if "$ref" in obj:
+                ref = obj["$ref"]
+                if ref.startswith("#/components/schemas/"):
+                    schema_name = ref.split("/")[-1]
+                    referenced.add(schema_name)
+            for v in obj.values():
+                find_refs(v)
+        elif isinstance(obj, list):
+            for item in obj:
+                find_refs(item)
+    
+    find_refs(spec)
+    return referenced
+
+
 def find_unmatched(spec, rust_structs, rust_enums):
-    """Find OpenAPI schemas with no corresponding Rust type."""
+    """Find OpenAPI schemas with no corresponding Rust type.
+    Categorizes into 'used' (referenced elsewhere in spec) and 'unused' (dead code in spec).
+    """
     schemas = spec["components"]["schemas"]
-    unmatched = []
+    referenced = find_schema_references(spec)
+    unmatched_used = []
+    unmatched_unused = []
 
     for schema_name in sorted(schemas.keys()):
         schema = schemas[schema_name]
@@ -429,9 +494,13 @@ def find_unmatched(spec, rust_structs, rust_enums):
         if schema.get("type") not in ("object", "string"):
             if "enum" not in schema and "properties" not in schema:
                 continue
-        unmatched.append(schema_name)
+        
+        if schema_name in referenced:
+            unmatched_used.append(schema_name)
+        else:
+            unmatched_unused.append(schema_name)
 
-    return unmatched
+    return unmatched_used, unmatched_unused
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -454,11 +523,11 @@ def categorize_issues(issues):
     return {"core": core, "streaming": streaming, "param": param, "total": len(issues)}
 
 
-def print_report(categorized, unmatched, *, show_streaming=False, show_params=False, show_all=False):
+def print_report(categorized, unmatched_used, unmatched_unused, *, show_streaming=False, show_params=False, show_all=False):
     """Print validation report."""
     total = categorized["total"]
 
-    if total == 0 and not unmatched:
+    if total == 0 and not unmatched_used and not unmatched_unused:
         print("✅ All models validated successfully!")
         return
 
@@ -475,7 +544,7 @@ def print_report(categorized, unmatched, *, show_streaming=False, show_params=Fa
             by_cat = {}
             for i in items:
                 by_cat.setdefault(i["category"], []).append(i)
-            for cat in ("missing_required", "extra_field", "type_mismatch",
+            for cat in ("missing_required", "required_field_option", "missing_optional_field", "extra_field", "type_mismatch",
                         "nullability", "missing_variant", "extra_variant"):
                 if cat not in by_cat:
                     continue
@@ -494,10 +563,16 @@ def print_report(categorized, unmatched, *, show_streaming=False, show_params=Fa
     print_section("PARAM VARIANTS", categorized["param"],
                   always_show=show_params or show_all)
 
-    if unmatched:
-        print(f"UNMATCHED SCHEMAS ({len(unmatched)} schemas in spec with no Rust type):")
-        for name in unmatched:
-            print(f"  ⚠️  {name}")
+    if unmatched_used:
+        print(f"MISSING TYPES ({len(unmatched_used)} schemas used in spec but missing in Rust):")
+        for name in unmatched_used:
+            print(f"  ❌ {name}")
+        print()
+
+    if unmatched_unused:
+        print(f"UNUSED SPEC SCHEMAS ({len(unmatched_unused)} schemas defined in spec but never referenced):")
+        for name in unmatched_unused:
+            print(f"  ⚠️  {name} (dead code in spec)")
         print()
 
 
@@ -529,17 +604,18 @@ def main():
     all_issues = struct_issues + enum_issues
 
     categorized = categorize_issues(all_issues)
-    unmatched = find_unmatched(spec, rust_structs, rust_enums)
+    unmatched_used, unmatched_unused = find_unmatched(spec, rust_structs, rust_enums)
 
     print_report(
         categorized,
-        unmatched,
+        unmatched_used,
+        unmatched_unused,
         show_streaming=args.show_streaming,
         show_params=args.show_params,
         show_all=args.show_all,
     )
 
-    return 0 if categorized["total"] == 0 else 1
+    return 0 if categorized["total"] == 0 and not unmatched_used else 1
 
 
 if __name__ == "__main__":
