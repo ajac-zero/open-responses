@@ -21,7 +21,7 @@ pub struct JsonSchemaResponseFormat {
     pub type_: String, // Always "json_schema"
     pub name: String,
     pub description: Option<String>, // nullable in spec
-    pub schema: serde_json::Value,    // nullable in spec but required
+    pub schema: serde_json::Value,   // nullable in spec but required
     pub strict: bool,
 }
 

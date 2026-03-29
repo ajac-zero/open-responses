@@ -4,7 +4,11 @@ use std::marker::PhantomData;
 use secrecy::ExposeSecret;
 use tracing::debug;
 
-use crate::client::{ClientCore, Error, Mode, ResponseStream, Result, RESPONSES_PATH};
+use crate::client::core::{AsyncClient, Client, ClientCore};
+use crate::client::error::{Error, Result};
+use crate::client::mode::{Async as AsyncMode, Mode, Sync as SyncMode};
+use crate::client::stream::{AsyncResponseStream, ResponseStream};
+use crate::client::RESPONSES_PATH;
 use crate::{
     CreateResponseBody, FunctionToolParam, IncludeEnum, InputItem, ReasoningParam,
     ResponseResource, ServiceTierEnum, StreamOptionsParam, TextParam, ToolChoiceParam,
@@ -42,16 +46,15 @@ fn empty_request_body() -> CreateResponseBody {
     }
 }
 
-/// Public builder for a response request.
-pub struct ResponseRequestBuilder<'a, M: Mode> {
+pub(crate) struct ResponseRequestBuilderCore<'a, M: Mode> {
     core: &'a ClientCore<M>,
     body: CreateResponseBody,
     api_key: Option<&'a str>,
     _mode: PhantomData<M>,
 }
 
-impl<'a, M: Mode> ResponseRequestBuilder<'a, M> {
-    pub(crate) fn new(core: &'a ClientCore<M>) -> Self {
+impl<'a, M: Mode> ResponseRequestBuilderCore<'a, M> {
+    fn new(core: &'a ClientCore<M>) -> Self {
         Self {
             core,
             body: empty_request_body(),
@@ -60,7 +63,7 @@ impl<'a, M: Mode> ResponseRequestBuilder<'a, M> {
         }
     }
 
-    pub fn body(mut self, body: CreateResponseBody) -> Self {
+    fn body(mut self, body: CreateResponseBody) -> Self {
         self.body = body;
         self
     }
@@ -71,139 +74,139 @@ impl<'a, M: Mode> ResponseRequestBuilder<'a, M> {
         self
     }
 
-    pub fn input(mut self, input: serde_json::Value) -> Self {
+    fn input(mut self, input: serde_json::Value) -> Self {
         self.body.input = Some(input);
         self
     }
 
-    pub fn input_item(self, input: InputItem) -> Self {
+    fn input_item(self, input: InputItem) -> Self {
         self.input_items([input])
     }
 
-    pub fn input_items(self, input: impl IntoIterator<Item = InputItem>) -> Self {
+    fn input_items(self, input: impl IntoIterator<Item = InputItem>) -> Self {
         self.serialized_input(input.into_iter().collect::<Vec<_>>())
     }
 
-    pub fn input_text(self, text: impl Into<String>) -> Self {
+    fn input_text(self, text: impl Into<String>) -> Self {
         self.serialized_input(text.into())
     }
 
-    pub fn model(mut self, model: impl Into<String>) -> Self {
+    fn model(mut self, model: impl Into<String>) -> Self {
         self.body.model = Some(model.into());
         self
     }
 
-    pub fn instructions(mut self, instructions: impl Into<String>) -> Self {
+    fn instructions(mut self, instructions: impl Into<String>) -> Self {
         self.body.instructions = Some(instructions.into());
         self
     }
 
-    pub fn previous_response_id(mut self, id: impl Into<String>) -> Self {
+    fn previous_response_id(mut self, id: impl Into<String>) -> Self {
         self.body.previous_response_id = Some(id.into());
         self
     }
 
-    pub fn include(mut self, include: impl IntoIterator<Item = IncludeEnum>) -> Self {
+    fn include(mut self, include: impl IntoIterator<Item = IncludeEnum>) -> Self {
         self.body.include = Some(include.into_iter().collect());
         self
     }
 
-    pub fn tools(mut self, tools: impl IntoIterator<Item = FunctionToolParam>) -> Self {
+    fn tools(mut self, tools: impl IntoIterator<Item = FunctionToolParam>) -> Self {
         self.body.tools = Some(tools.into_iter().collect());
         self
     }
 
-    pub fn tool_choice(mut self, choice: ToolChoiceParam) -> Self {
+    fn tool_choice(mut self, choice: ToolChoiceParam) -> Self {
         self.body.tool_choice = Some(choice);
         self
     }
 
-    pub fn metadata(mut self, metadata: HashMap<String, String>) -> Self {
+    fn metadata(mut self, metadata: HashMap<String, String>) -> Self {
         self.body.metadata = Some(metadata);
         self
     }
 
-    pub fn text(mut self, text: TextParam) -> Self {
+    fn text(mut self, text: TextParam) -> Self {
         self.body.text = Some(text);
         self
     }
 
-    pub fn temperature(mut self, temperature: f64) -> Self {
+    fn temperature(mut self, temperature: f64) -> Self {
         self.body.temperature = Some(temperature);
         self
     }
 
-    pub fn top_p(mut self, top_p: f64) -> Self {
+    fn top_p(mut self, top_p: f64) -> Self {
         self.body.top_p = Some(top_p);
         self
     }
 
-    pub fn presence_penalty(mut self, presence_penalty: f64) -> Self {
+    fn presence_penalty(mut self, presence_penalty: f64) -> Self {
         self.body.presence_penalty = Some(presence_penalty);
         self
     }
 
-    pub fn frequency_penalty(mut self, frequency_penalty: f64) -> Self {
+    fn frequency_penalty(mut self, frequency_penalty: f64) -> Self {
         self.body.frequency_penalty = Some(frequency_penalty);
         self
     }
 
-    pub fn parallel_tool_calls(mut self, parallel_tool_calls: bool) -> Self {
+    fn parallel_tool_calls(mut self, parallel_tool_calls: bool) -> Self {
         self.body.parallel_tool_calls = Some(parallel_tool_calls);
         self
     }
 
-    pub fn stream_options(mut self, stream_options: StreamOptionsParam) -> Self {
+    fn stream_options(mut self, stream_options: StreamOptionsParam) -> Self {
         self.body.stream_options = Some(stream_options);
         self
     }
 
-    pub fn background(mut self, background: bool) -> Self {
+    fn background(mut self, background: bool) -> Self {
         self.body.background = background;
         self
     }
 
-    pub fn max_output_tokens(mut self, max_output_tokens: i64) -> Self {
+    fn max_output_tokens(mut self, max_output_tokens: i64) -> Self {
         self.body.max_output_tokens = Some(max_output_tokens);
         self
     }
 
-    pub fn max_tool_calls(mut self, max_tool_calls: i64) -> Self {
+    fn max_tool_calls(mut self, max_tool_calls: i64) -> Self {
         self.body.max_tool_calls = Some(max_tool_calls);
         self
     }
 
-    pub fn reasoning(mut self, reasoning: ReasoningParam) -> Self {
+    fn reasoning(mut self, reasoning: ReasoningParam) -> Self {
         self.body.reasoning = Some(reasoning);
         self
     }
 
-    pub fn safety_identifier(mut self, safety_identifier: impl Into<String>) -> Self {
+    fn safety_identifier(mut self, safety_identifier: impl Into<String>) -> Self {
         self.body.safety_identifier = Some(safety_identifier.into());
         self
     }
 
-    pub fn prompt_cache_key(mut self, prompt_cache_key: impl Into<String>) -> Self {
+    fn prompt_cache_key(mut self, prompt_cache_key: impl Into<String>) -> Self {
         self.body.prompt_cache_key = Some(prompt_cache_key.into());
         self
     }
 
-    pub fn truncation(mut self, truncation: TruncationEnum) -> Self {
+    fn truncation(mut self, truncation: TruncationEnum) -> Self {
         self.body.truncation = Some(truncation);
         self
     }
 
-    pub fn store(mut self, store: bool) -> Self {
+    fn store(mut self, store: bool) -> Self {
         self.body.store = store;
         self
     }
 
-    pub fn service_tier(mut self, service_tier: ServiceTierEnum) -> Self {
+    fn service_tier(mut self, service_tier: ServiceTierEnum) -> Self {
         self.body.service_tier = Some(service_tier);
         self
     }
 
-    pub fn top_logprobs(mut self, top_logprobs: i64) -> Self {
+    fn top_logprobs(mut self, top_logprobs: i64) -> Self {
         self.body.top_logprobs = Some(top_logprobs);
         self
     }
@@ -236,9 +239,206 @@ impl<'a, M: Mode> ResponseRequestBuilder<'a, M> {
     }
 }
 
-impl<'a> ResponseRequestBuilder<'a, crate::client::Sync> {
+pub struct ResponseRequestBuilder<'a> {
+    inner: ResponseRequestBuilderCore<'a, SyncMode>,
+}
+
+pub struct AsyncResponseRequestBuilder<'a> {
+    inner: ResponseRequestBuilderCore<'a, AsyncMode>,
+}
+
+macro_rules! impl_request_builder_methods {
+    ($builder:ident) => {
+        impl<'a> $builder<'a> {
+            pub fn body(mut self, body: CreateResponseBody) -> Self {
+                self.inner = self.inner.body(body);
+                self
+            }
+
+            pub fn input(mut self, input: serde_json::Value) -> Self {
+                self.inner = self.inner.input(input);
+                self
+            }
+
+            pub fn input_item(mut self, input: InputItem) -> Self {
+                self.inner = self.inner.input_item(input);
+                self
+            }
+
+            pub fn input_items(mut self, input: impl IntoIterator<Item = InputItem>) -> Self {
+                self.inner = self.inner.input_items(input);
+                self
+            }
+
+            pub fn input_text(mut self, text: impl Into<String>) -> Self {
+                self.inner = self.inner.input_text(text);
+                self
+            }
+
+            pub fn model(mut self, model: impl Into<String>) -> Self {
+                self.inner = self.inner.model(model);
+                self
+            }
+
+            pub fn instructions(mut self, instructions: impl Into<String>) -> Self {
+                self.inner = self.inner.instructions(instructions);
+                self
+            }
+
+            pub fn previous_response_id(mut self, id: impl Into<String>) -> Self {
+                self.inner = self.inner.previous_response_id(id);
+                self
+            }
+
+            pub fn include(mut self, include: impl IntoIterator<Item = IncludeEnum>) -> Self {
+                self.inner = self.inner.include(include);
+                self
+            }
+
+            pub fn tools(mut self, tools: impl IntoIterator<Item = FunctionToolParam>) -> Self {
+                self.inner = self.inner.tools(tools);
+                self
+            }
+
+            pub fn tool_choice(mut self, choice: ToolChoiceParam) -> Self {
+                self.inner = self.inner.tool_choice(choice);
+                self
+            }
+
+            pub fn metadata(mut self, metadata: HashMap<String, String>) -> Self {
+                self.inner = self.inner.metadata(metadata);
+                self
+            }
+
+            pub fn text(mut self, text: TextParam) -> Self {
+                self.inner = self.inner.text(text);
+                self
+            }
+
+            pub fn temperature(mut self, temperature: f64) -> Self {
+                self.inner = self.inner.temperature(temperature);
+                self
+            }
+
+            pub fn top_p(mut self, top_p: f64) -> Self {
+                self.inner = self.inner.top_p(top_p);
+                self
+            }
+
+            pub fn presence_penalty(mut self, presence_penalty: f64) -> Self {
+                self.inner = self.inner.presence_penalty(presence_penalty);
+                self
+            }
+
+            pub fn frequency_penalty(mut self, frequency_penalty: f64) -> Self {
+                self.inner = self.inner.frequency_penalty(frequency_penalty);
+                self
+            }
+
+            pub fn parallel_tool_calls(mut self, parallel_tool_calls: bool) -> Self {
+                self.inner = self.inner.parallel_tool_calls(parallel_tool_calls);
+                self
+            }
+
+            pub fn stream_options(mut self, stream_options: StreamOptionsParam) -> Self {
+                self.inner = self.inner.stream_options(stream_options);
+                self
+            }
+
+            pub fn background(mut self, background: bool) -> Self {
+                self.inner = self.inner.background(background);
+                self
+            }
+
+            pub fn max_output_tokens(mut self, max_output_tokens: i64) -> Self {
+                self.inner = self.inner.max_output_tokens(max_output_tokens);
+                self
+            }
+
+            pub fn max_tool_calls(mut self, max_tool_calls: i64) -> Self {
+                self.inner = self.inner.max_tool_calls(max_tool_calls);
+                self
+            }
+
+            pub fn reasoning(mut self, reasoning: ReasoningParam) -> Self {
+                self.inner = self.inner.reasoning(reasoning);
+                self
+            }
+
+            pub fn safety_identifier(mut self, safety_identifier: impl Into<String>) -> Self {
+                self.inner = self.inner.safety_identifier(safety_identifier);
+                self
+            }
+
+            pub fn prompt_cache_key(mut self, prompt_cache_key: impl Into<String>) -> Self {
+                self.inner = self.inner.prompt_cache_key(prompt_cache_key);
+                self
+            }
+
+            pub fn truncation(mut self, truncation: TruncationEnum) -> Self {
+                self.inner = self.inner.truncation(truncation);
+                self
+            }
+
+            pub fn store(mut self, store: bool) -> Self {
+                self.inner = self.inner.store(store);
+                self
+            }
+
+            pub fn service_tier(mut self, service_tier: ServiceTierEnum) -> Self {
+                self.inner = self.inner.service_tier(service_tier);
+                self
+            }
+
+            pub fn top_logprobs(mut self, top_logprobs: i64) -> Self {
+                self.inner = self.inner.top_logprobs(top_logprobs);
+                self
+            }
+        }
+    };
+}
+
+impl_request_builder_methods!(ResponseRequestBuilder);
+impl_request_builder_methods!(AsyncResponseRequestBuilder);
+
+impl<'a> ResponseRequestBuilder<'a> {
+    pub(crate) fn new(client: &'a Client) -> Self {
+        Self {
+            inner: ResponseRequestBuilderCore::new(&client.inner),
+        }
+    }
+
     /// Send the request and return a complete response.
-    pub fn send(mut self) -> Result<ResponseResource> {
+    pub fn send(self) -> Result<ResponseResource> {
+        self.inner.send()
+    }
+
+    /// Send the request and return a streaming response.
+    pub fn stream(self) -> Result<ResponseStream> {
+        self.inner.stream()
+    }
+}
+
+impl<'a> AsyncResponseRequestBuilder<'a> {
+    pub(crate) fn new(client: &'a AsyncClient) -> Self {
+        Self {
+            inner: ResponseRequestBuilderCore::new(&client.inner),
+        }
+    }
+
+    /// Asynchronously send the request and return a complete response.
+    pub async fn send(self) -> Result<ResponseResource> {
+        self.inner.send().await
+    }
+
+    /// Asynchronously send the request and return a streaming response.
+    pub async fn stream(self) -> Result<AsyncResponseStream> {
+        self.inner.stream().await
+    }
+}
+
+impl<'a> ResponseRequestBuilderCore<'a, SyncMode> {
+    fn send(mut self) -> Result<ResponseResource> {
         self.body.stream = false;
         debug!(request_body = ?self.body);
 
@@ -250,20 +450,18 @@ impl<'a> ResponseRequestBuilder<'a, crate::client::Sync> {
         Ok(resource)
     }
 
-    /// Send the request and return a streaming response.
-    pub fn stream(mut self) -> Result<ResponseStream> {
+    fn stream(mut self) -> Result<ResponseStream> {
         self.body.stream = true;
 
         let rt = self.core.rt.clone().expect("sync mode has runtime");
         let response = rt.block_on(self.send_request())?;
 
-        Ok(ResponseStream::spawn(response, Some(rt)))
+        Ok(ResponseStream::spawn(response, rt))
     }
 }
 
-impl<'a> ResponseRequestBuilder<'a, crate::client::Async> {
-    /// Asynchronously send the request and return a complete response.
-    pub async fn send(mut self) -> Result<ResponseResource> {
+impl<'a> ResponseRequestBuilderCore<'a, AsyncMode> {
+    async fn send(mut self) -> Result<ResponseResource> {
         self.body.stream = false;
         debug!(request_body = ?self.body);
 
@@ -274,21 +472,32 @@ impl<'a> ResponseRequestBuilder<'a, crate::client::Async> {
         Ok(resource)
     }
 
-    /// Asynchronously send the request and return a streaming response.
-    pub async fn stream(mut self) -> Result<ResponseStream> {
+    async fn stream(mut self) -> Result<AsyncResponseStream> {
         self.body.stream = true;
 
         let response = self.send_request().await?;
 
-        Ok(ResponseStream::spawn(response, None))
+        Ok(AsyncResponseStream::spawn(response))
     }
 }
 
-impl<M: Mode> std::fmt::Debug for ResponseRequestBuilder<'_, M> {
+impl<M: Mode> std::fmt::Debug for ResponseRequestBuilderCore<'_, M> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ResponseRequestBuilder")
             .field("body", &self.body)
             .finish()
+    }
+}
+
+impl std::fmt::Debug for ResponseRequestBuilder<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.inner.fmt(f)
+    }
+}
+
+impl std::fmt::Debug for AsyncResponseRequestBuilder<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.inner.fmt(f)
     }
 }
 
@@ -302,10 +511,15 @@ mod tests {
         InputItem::UserMessage(UserMessageItemParam {
             type_: "message".into(),
             role: "user".into(),
-            content: Some(vec![InputContentPart::InputText(InputTextContentParam {
-                type_: "input_text".into(),
-                text: text.into(),
-            })]),
+            content: serde_json::to_value(vec![InputContentPart::InputText(
+                InputTextContentParam {
+                    type_: "input_text".into(),
+                    text: text.into(),
+                },
+            )])
+            .expect("input content should serialize"),
+            id: None,
+            status: None,
         })
     }
 
@@ -315,7 +529,7 @@ mod tests {
         let builder = client.create_response().input_item(user_message("hello"));
 
         assert_eq!(
-            builder.body.input,
+            builder.inner.body.input,
             Some(serde_json::json!([
                 {
                     "type": "message",
@@ -334,7 +548,7 @@ mod tests {
         let client = Client::default();
         let builder = client.create_response().input_text("hello");
 
-        assert_eq!(builder.body.input, Some(serde_json::json!("hello")));
+        assert_eq!(builder.inner.body.input, Some(serde_json::json!("hello")));
     }
 
     #[test]
@@ -345,7 +559,7 @@ mod tests {
             .input_items([user_message("hello"), user_message("world")]);
 
         assert_eq!(
-            builder.body.input,
+            builder.inner.body.input,
             Some(serde_json::json!([
                 {
                     "type": "message",
